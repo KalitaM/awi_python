@@ -11,13 +11,16 @@ def read_ttr_compare(filename):
         f.read(4) # skip tail
         skip_head = f.read(4)
 
+        trace_nbytes = 4 * timesteps
+
         predict = []
         actual = []
         prev_ref = -1
         while skip_head:
             int.from_bytes(f.read(4), "little") # csref
             prref = int.from_bytes(f.read(4), "little")
-            samples = [struct.unpack('f', f.read(4))[0] for _ in range(timesteps)]
+            # samples = [struct.unpack('f', f.read(4))[0] for _ in range(timesteps)]
+            samples = np.frombuffer(f.read(trace_nbytes), dtype="float32")
             if prref > prev_ref:
                 predict.append(samples)
                 prev_ref = prref
@@ -29,8 +32,9 @@ def read_ttr_compare(filename):
         
         for _ in range(len(predict) - 1):
             f.read(16)
-            actual.append([struct.unpack('f', f.read(4))[0] for _ in range(timesteps)])
-        
+            # actual.append([struct.unpack('f', f.read(4))[0] for _ in range(timesteps)])
+            actual.append(np.frombuffer(f.read(trace_nbytes), dtype="float32"))
+
         return total_time / timesteps, np.array(predict + actual)
 
 def read_rcvrlist(filename):
@@ -47,13 +51,18 @@ def read_ttr_residual(filename):
         f.read(4) # skip tail
         skip_head = f.read(4)
 
+        trace_nbytes = 4 * timesteps
+
+
         predict = []
         prev_ref = -1
         while skip_head:
             int.from_bytes(f.read(4), "little") # csref
             prref = int.from_bytes(f.read(4), "little")
             # print(prref)
-            samples = [struct.unpack('f', f.read(4))[0] for _ in range(timesteps)]
+            # samples = [struct.unpack('f', f.read(4))[0] for _ in range(timesteps)]
+            samples = np.frombuffer(f.read(trace_nbytes), dtype="float32")
+
             if prref > prev_ref:
                 predict.append(samples)
                 prev_ref = prref
